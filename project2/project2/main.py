@@ -32,16 +32,16 @@ if __name__ == '__main__':
     start = argv[2]
     goals = argv[3].split(',')
     expansions = int(argv[4])
-    algorithm = argv[4].lower()
+    algorithm = argv[5].lower()
 
     heuristic = None
     verbose = False
     if algorithm == 'a*':
-        heuristic = int(argv[5])
+        heuristic = int(argv[6])
 
-        if len(argv) == 7:
+        if len(argv) == 8:
             verbose = True
-    elif len(argv) == 6:
+    elif len(argv) == 7:
         verbose = True
 
     # graph = util.graphviz.GraphViz()
@@ -53,6 +53,6 @@ if __name__ == '__main__':
     #     graph.markGoal(goal)
     graph = Graph(graph_fp)
     print(graph)
-    searcher = Searcher(
-        graph, algorithm, start, goals, expansions, heuristic, verbose)
-    searcher()
+    # searcher = Searcher(
+    #     graph, algorithm, start, goals, expansions, heuristic, verbose)
+    # print(searcher().label)

@@ -44,6 +44,15 @@ if __name__ == '__main__':
     elif len(argv) == 7:
         verbose = True
 
+    print(f"You have asked for a/an '{algorithm}' type search to be run on the"
+          f" graph specified by the file '{graph_fp}.'\n")
+
+    if algorithm == 'a*':
+        print(f"Heuristic '{heuristic}' will be used.\n")
+
+    print(f"Your start node is '{start}' and your goal(s) are '{goals}'.\n"
+          f"Up to '{expansions}' expansions will be done in search of the goal"
+          " (0 means no limit)")
     # graph = util.graphviz.GraphViz()
     # graph.loadGraphFromFile(graph_fp)
     # graph.plot()
@@ -52,7 +61,7 @@ if __name__ == '__main__':
     # for goal in goals:
     #     graph.markGoal(goal)
     graph = Graph(graph_fp)
-    print(graph)
+    # print(graph)
     # searcher = Searcher(
     #     graph, algorithm, start, goals, expansions, heuristic, verbose)
     # print(searcher().label)

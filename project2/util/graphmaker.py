@@ -27,8 +27,8 @@ __copyright__ = "Copyright 2018, Northern Arizona University, Flagstaff AZ"
 import numpy as np
 import scipy.spatial as graph
 import matplotlib.pyplot as plt
-from viz.node import Node
-from viz.edge import Edge
+from util.node import Node
+from util.edge import Edge
 
 class GraphMaker:
 

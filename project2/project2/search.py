@@ -82,7 +82,7 @@ class Searcher:
                 # For BFS we keep the old one
                 if self.algorithm == 'BFS':
                     pass
-                # For all other algorithms we may keep th new one
+                # For all other algorithms we may keep the new one
                 else:
                     legal_children.append(child)
             else:

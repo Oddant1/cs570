@@ -32,7 +32,7 @@ if __name__ == '__main__':
     start = argv[2]
     goals = argv[3].split(',')
     expansions = int(argv[4])
-    algorithm = argv[5].lower()
+    algorithm = argv[5].upper()
 
     heuristic = None
     verbose = False
@@ -45,10 +45,10 @@ if __name__ == '__main__':
         verbose = True
 
     print(f"You have asked for a/an '{algorithm}' type search to be run on the"
-          f" graph specified by the file '{graph_fp}.'\n")
+          f" graph specified by the file '{graph_fp}.'")
 
     if algorithm == 'a*':
-        print(f"Heuristic '{heuristic}' will be used.\n")
+        print(f"Heuristic '{heuristic}' will be used.")
 
     print(f"Your start node is '{start}' and your goal(s) are '{goals}'.\n"
           f"Up to '{expansions}' expansions will be done in search of the goal"
@@ -62,6 +62,7 @@ if __name__ == '__main__':
     #     graph.markGoal(goal)
     graph = Graph(graph_fp)
     # print(graph)
-    # searcher = Searcher(
-    #     graph, algorithm, start, goals, expansions, heuristic, verbose)
-    # print(searcher().label)
+    searcher = Searcher(
+        graph, algorithm, start, goals, expansions, heuristic, verbose)
+    goal = searcher.search()
+    print(f'LABEL: {goal.label}\nPATH: {goal.path}\nCOST: {goal.cost}')

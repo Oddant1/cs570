@@ -4,6 +4,7 @@ from collections import namedtuple
 Point = namedtuple('Point', 'x y')
 Edge = namedtuple('Edge', 'start end length')
 
+
 class Graph:
     def __init__(self, graph_fp):
         self.nodes = {}

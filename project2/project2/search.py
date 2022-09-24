@@ -180,7 +180,7 @@ class Searcher:
         return added_children
 
     def _H(self, node, func):
-        """ Takes ina heuristic and finds the min value from current node to a
+        """ Takes in a heuristic and finds the min value from current node to a
         goal for the given heuristic
         """
         smallest = inf

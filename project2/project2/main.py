@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     print(f"Your start node is '{start}' and your goal(s) are '{goals}'.\n"
           f"Up to '{expansions}' expansions will be done in search of the goal"
-          " (0 means no limit)")
+          " (0 means no limit)\n")
     # graph = util.graphviz.GraphViz()
     # graph.loadGraphFromFile(graph_fp)
     # graph.plot()

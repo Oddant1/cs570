@@ -43,6 +43,8 @@ class Searcher:
             self.current_node = self.frontier.pop(0)
             self._update_open_depth()
 
+            if self.verbose:
+                print(f"VERBOSE:\nEXPANDED: {self.current_node}")
             # Stop if we are at a goal
             if self.current_node in self.goals:
                 break
@@ -55,10 +57,9 @@ class Searcher:
 
             # Print the extra verbose stats
             if self.verbose:
-                print(f'VERBOSE:\nEXPANDED: {self.current_node}\nCHILDREN:'
-                      f' {children}\nLEGAL_CHILDREN: {legal_children}\n'
-                      f'ADDED CHILDREN: {added_children}\nFRONTIER:'
-                      f' {self.frontier}\n')
+                print(f'CHILDREN:  {children}\nLEGAL_CHILDREN:'
+                      f' {legal_children}\nADDED CHILDREN:'
+                      f' {added_children}\nFRONTIER: {self.frontier}\n')
 
         # Divide to get our averagess
         self.avg_open /= self.expansions_taken
@@ -208,7 +209,21 @@ class Searcher:
         goal_dist = self._SLD(self.current_node, goal)
         node_dist = self._SLD(self.current_node, node)
 
-        return acos(dot_product / (goal_dist * node_dist))
+        # I had floating point error give me a 1.0000000000000002 which of
+        # course caused acos to fail, so this prevents that
+        angle = dot_product / (goal_dist * node_dist)
+        try:
+            angle = acos(angle)
+        except ValueError as e:
+            if "math domain error" in str(e):
+                if angle > 1:
+                    angle = 1
+                elif angle < -1:
+                    angle = -1
+            else:
+                raise e
+        finally:
+            return angle
 
     def _dot(self, vec1, vec2):
         """ Calculates the dot product between two vectors

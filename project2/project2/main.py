@@ -64,7 +64,11 @@ if __name__ == '__main__':
     searcher = Searcher(
         graph, algorithm, start, goals, expansions, heuristic, verbose)
     goal = searcher.search()
-    print(f'LABEL: {goal.label}\nPATH: {goal.path}\nCOST: {goal.cost}\n')
+    # Formatting print
+    if verbose:
+        print()
+    print(f'FOUND GOAL:\nLABEL: {goal.label}\nPATH: {goal.path}\nCOST:'
+          f' {goal.cost}\n')
     print('STATS:\n'
           'AVG_OPEN: {:.2f}\nMAX_OPEN: {:.2f}\n\n'
           'AVG_DEPTH: {:.2f}\nMAX_DEPTH: {:.2f}\n\n'

@@ -149,11 +149,14 @@ class Searcher:
                     if self.heuristic == 'SLD' and child.heuristic_cost < existing.heuristic_cost:
                         self.frontier.remove(existing)
                         self.frontier.append(child)
+                        added_children.append(child)
                     elif child.cost < existing.cost:
                         self.frontier.remove(existing)
                         self.frontier.append(child)
+                        added_children.append(child)
                 else:
                     self.frontier.append(child)
+                    added_children.append(child)
             self.frontier.sort(key=lambda node: node.heuristic_cost)
 
         return added_children

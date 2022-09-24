@@ -19,13 +19,12 @@ if __name__ == '__main__':
     will cause the program to run as many expansions as it needs to find a
     solution (or until you kill it because it was taking too long)
 
-    algorithm: bfs, dfs, best, ids, a* (not case sensitive)
+    algorithm: BFS, DFS, BEST, IDS, A* (not case sensitive)
 
-    if algorithm is a*:
-        heuristic: 1 or 2
+    if algorithm is A*:
+        heuristic: sld or dir
 
-    if there is an additional argument, it will be interpreted as the verbose
-    flag being set
+    the --verbose flag sets verbose mode
     """
     # Get our arguments
     graph_fp = argv[1]
@@ -36,18 +35,18 @@ if __name__ == '__main__':
 
     heuristic = None
     verbose = False
-    if algorithm == 'a*':
-        heuristic = int(argv[6])
+    visual = False
 
-        if len(argv) == 8:
-            verbose = True
-    elif len(argv) == 7:
+    if algorithm == 'A*':
+        heuristic = argv[6].upper()
+
+    if '--verbose' in argv:
         verbose = True
 
     print(f"You have asked for a/an '{algorithm}' type search to be run on the"
           f" graph specified by the file '{graph_fp}.'")
 
-    if algorithm == 'a*':
+    if algorithm == 'A*':
         print(f"Heuristic '{heuristic}' will be used.")
 
     print(f"Your start node is '{start}' and your goal(s) are '{goals}'.\n"
@@ -65,4 +64,10 @@ if __name__ == '__main__':
     searcher = Searcher(
         graph, algorithm, start, goals, expansions, heuristic, verbose)
     goal = searcher.search()
-    print(f'LABEL: {goal.label}\nPATH: {goal.path}\nCOST: {goal.cost}')
+    print(f'LABEL: {goal.label}\nPATH: {goal.path}\nCOST: {goal.cost}\n')
+    print('STATS:\n'
+          'AVG_OPEN: {:.2f}\nMAX_OPEN: {:.2f}\n\n'
+          'AVG_DEPTH: {:.2f}\nMAX_DEPTH: {:.2f}\n\n'
+          'AVG_BRANCHING_FACTOR: {:.2f}'.format(
+            searcher.avg_open, searcher.max_open, searcher.avg_depth,
+            searcher.max_depth, searcher.avg_branching))

@@ -18,6 +18,10 @@ class Searcher:
         self.expansions = expansions
         self.expansions_taken = 0
         self.heuristic = heuristic
+
+        self.IDS_limit = 3
+        self.IDS_step = 3
+
         self.verbose = verbose
 
         # Currently open nodes
@@ -120,6 +124,21 @@ class Searcher:
 
                 self.frontier.insert(0, child)
                 added_children.insert(0, child)
+        # Since IDS is DFS at heart, it follows a similar pattern
+        elif self.algorithm == 'IDS':
+            for child in reversed(legal_children):
+                if child in self.frontier:
+                    self.frontier.remove(child)
+
+                if child.depth > self.IDS_limit:
+                    self.frontier.append(child)
+                else:
+                    self.frontier.insert(0, child)
+
+                added_children.append(child)
+
+            if self.frontier[0].depth > self.IDS_limit:
+                self.IDS_limit += self.IDS_step
         # In BEST remove the worst copy of a node from the frontier and sort
         # the frontier based on distance to goal
         elif self.algorithm == 'BEST':
@@ -135,8 +154,6 @@ class Searcher:
                     self.frontier.append(child)
 
             self.frontier.sort(key=lambda node: node.heuristic_cost)
-        elif self.algorithm == 'IDS':
-            pass
         else:
             for child in legal_children:
                 if self.heuristic == 'SLD':

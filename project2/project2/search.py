@@ -211,6 +211,7 @@ class Searcher:
 
         # I had floating point error give me a 1.0000000000000002 which of
         # course caused acos to fail, so this prevents that
+        # This happened from A to I on 10node with a* DIR
         angle = dot_product / (goal_dist * node_dist)
         try:
             angle = acos(angle)

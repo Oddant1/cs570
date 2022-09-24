@@ -7,9 +7,16 @@ Edge = namedtuple('Edge', 'start end length')
 
 class Graph:
     def __init__(self, graph_fp):
+        # Maps node label to its spacial coordinates
         self.nodes = {}
+        # Maps node label a list of egdes with the key node as start
         self.edges = {}
+        # Populate nodes and edges
         self._create_graph(graph_fp)
+        # Sort all edge lists alphabetically by their end node. This will be
+        # useful for our searches
+        for edges in self.edges.values():
+            edges.sort(key=lambda edge: edge.end)
 
     def _create_graph(self, graph_fp):
         # Read all lines from our file

@@ -1,13 +1,17 @@
 from math import sqrt, inf, acos
 from collections import namedtuple
 
+import matplotlib.pyplot as plt
+
+from .graph import Point
+
 
 Vec2 = namedtuple('Vec2', 'x y')
 
 
 class Searcher:
-    def __init__(self, graph, algorithm, start, goals, expansions, heuristic,
-                 verbose):
+    def __init__(self, graph, algorithm, start, goals, expansions=0,
+                 heuristic=None, verbose=False, graph_viz=None):
         self.graph = graph
         self.algorithm = algorithm
 
@@ -36,6 +40,24 @@ class Searcher:
 
         self.avg_branching = 0
 
+        # I wanted these prints in main, but the submission is easier if they
+        # are here
+        print(f"You have asked for a/an '{self.algorithm}' type search to be"
+              f" run on the graph specified by the file '{graph.file}.'")
+
+        if algorithm == 'A*':
+            print(f"Heuristic '{self.heuristic}' will be used.")
+
+        print(f"Your start node is '{self.start}' and your goal(s) are"
+              f" '{self.goals}'.\nUp to '{self.expansions}' expansions will"
+              " be done in search of the goal (0 means no limit)\n")
+
+        self.graph_viz = graph_viz
+        if self.graph_viz:
+            self._plotStart()
+            plt.show()
+
+
     def search(self):
         while self.expansions == 0 or self.expansions_taken < self.expansions:
             self.expansions_taken += 1
@@ -55,6 +77,10 @@ class Searcher:
             legal_children = self._find_legal_children(children)
             added_children = self._add_children(legal_children)
 
+            if self.graph_viz:
+                self._plotCurrent(added_children)
+                plt.show()
+
             # Print the extra verbose stats
             if self.verbose:
                 print(f'CHILDREN:  {children}\nLEGAL_CHILDREN:'
@@ -66,7 +92,22 @@ class Searcher:
         self.avg_depth /= self.expansions_taken
         self.avg_branching /= self.expansions_taken
 
-        return self.current_node
+        if self.graph_viz:
+            self._plotEnd()
+            plt.show()
+
+        end = self.current_node
+        # Formatting print
+        if self.verbose:
+            print()
+        print(f'FOUND GOAL:\nLABEL: {end.label}\nPATH: {end.path}\nCOST:'
+            f' {end.cost}\n')
+        print('STATS:\n'
+            'AVG_OPEN: {:.2f}\nMAX_OPEN: {:.2f}\n\n'
+            'AVG_DEPTH: {:.2f}\nMAX_DEPTH: {:.2f}\n\n'
+            'AVG_BRANCHING_FACTOR: {:.2f}'.format(
+                self.avg_open, self.max_open, self.avg_depth,
+                self.max_depth, self.avg_branching))
 
     def _expand_node(self):
         """ Gets all children of the current node
@@ -144,7 +185,8 @@ class Searcher:
         # the frontier based on distance to goal
         elif self.algorithm == 'BEST':
             for child in legal_children:
-                child.heuristic_cost = self._SLD(child)
+                if not child.heuristic_cost:
+                    child.heuristic_cost = self._H(child, self._SLD)
 
                 if child in self.frontier:
                     existing = self.frontier[self.frontier.index(child)]
@@ -155,7 +197,9 @@ class Searcher:
                     self.frontier.append(child)
 
             self.frontier.sort(key=lambda node: node.heuristic_cost)
-        else:
+        # The behavior of A* depends on the heuristic. It keeps whichever path
+        # it deems better based on the given heuristic
+        elif self.algorithm == 'A*':
             for child in legal_children:
                 if self.heuristic == 'SLD':
                     child.heuristic_cost = self._H(child, self._SLD) + child.cost
@@ -168,14 +212,18 @@ class Searcher:
                         self.frontier.remove(existing)
                         self.frontier.append(child)
                         added_children.append(child)
-                    elif child.cost < existing.cost:
+                    elif self.heuristic == 'DIR' and child.cost < existing.cost:
                         self.frontier.remove(existing)
                         self.frontier.append(child)
                         added_children.append(child)
+                    else:
+                        raise ValueError(f'Unknown heuristic: {self.heuristic}')
                 else:
                     self.frontier.append(child)
                     added_children.append(child)
             self.frontier.sort(key=lambda node: node.heuristic_cost)
+        else:
+            raise ValueError(f'Unknown algorithm: {self.algorithm}')
 
         return added_children
 
@@ -243,13 +291,28 @@ class Searcher:
     def _update_branching(self, children):
         self.avg_branching += len(children)
 
+    def _plotStart(self):
+        self.graph_viz.plot()
+        self.graph_viz.markStart(self.start.label)
+        for goal in self.goals:
+            self.graph_viz.markGoal(goal.label)
+
+    def _plotCurrent(self, added_children):
+        self._plotStart()
+        self.graph_viz.exploreNode(self.current_node.label, [node.label for node in self.current_node.path])
+        self.graph_viz.exploreEdges(self.current_node.label, [child.label for child in added_children])
+
+    def _plotEnd(self):
+        self._plotStart()
+        self.graph_viz.paintPath(
+            [node.label for node in self.current_node.path])
 
 class SearchNode:
     """ This represents a node identified in the search. It holds the node's
     label, the cost to reach it, and the path taken
     """
 
-    def __init__(self, label, coords, path=[], cost=0):
+    def __init__(self, label, coords=Point(0, 0), path=[], cost=0, heuristic_cost=0):
         self.label = label
 
         self.x = coords.x
@@ -261,8 +324,8 @@ class SearchNode:
 
         # The cost to reach this node from the start
         self.cost = cost
-        # The chost assigned to this node under a given heuristic (SLD or DIR)
-        self.heuristic_cost = 0
+        # The cost assigned to this node under a given heuristic (SLD or DIR)
+        self.heuristic_cost = heuristic_cost
 
     @property
     def depth(self):
@@ -279,7 +342,11 @@ class SearchNode:
             return self.label == other
 
     def __repr__(self):
-        return self.label
+        if self.heuristic_cost:
+            return f'({self.label}, {self.heuristic_cost:0.2f})'
+        else:
+            return f'({self.label}, {self.cost:0.2f})'
+
 
     def __sub__(self, other):
         """ Return a vector between this node and another node

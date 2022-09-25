@@ -1,6 +1,6 @@
 from sys import argv
 
-import util
+from util.graphviz import GraphViz
 from graph import Graph
 from search import Searcher
 
@@ -43,35 +43,8 @@ if __name__ == '__main__':
     if '--verbose' in argv:
         verbose = True
 
-    print(f"You have asked for a/an '{algorithm}' type search to be run on the"
-          f" graph specified by the file '{graph_fp}.'")
-
-    if algorithm == 'A*':
-        print(f"Heuristic '{heuristic}' will be used.")
-
-    print(f"Your start node is '{start}' and your goal(s) are '{goals}'.\n"
-          f"Up to '{expansions}' expansions will be done in search of the goal"
-          " (0 means no limit)\n")
-    # graph = util.graphviz.GraphViz()
-    # graph.loadGraphFromFile(graph_fp)
-    # graph.plot()
-    # graph.markStart(start)
-
-    # for goal in goals:
-    #     graph.markGoal(goal)
     graph = Graph(graph_fp)
-    # print(graph)
     searcher = Searcher(
         graph, algorithm, start, goals, expansions, heuristic, verbose)
     goal = searcher.search()
-    # Formatting print
-    if verbose:
-        print()
-    print(f'FOUND GOAL:\nLABEL: {goal.label}\nPATH: {goal.path}\nCOST:'
-          f' {goal.cost}\n')
-    print('STATS:\n'
-          'AVG_OPEN: {:.2f}\nMAX_OPEN: {:.2f}\n\n'
-          'AVG_DEPTH: {:.2f}\nMAX_DEPTH: {:.2f}\n\n'
-          'AVG_BRANCHING_FACTOR: {:.2f}'.format(
-            searcher.avg_open, searcher.max_open, searcher.avg_depth,
-            searcher.max_depth, searcher.avg_branching))
+

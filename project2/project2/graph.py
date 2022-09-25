@@ -7,6 +7,7 @@ Edge = namedtuple('Edge', 'start end length')
 
 class Graph:
     def __init__(self, graph_fp):
+        self.file = graph_fp
         # Maps node label to its spacial coordinates
         self.nodes = {}
         # Maps node label a list of egdes with the key node as start

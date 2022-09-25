@@ -22,11 +22,18 @@
 __author__ = "Eck Doerry"
 __copyright__ = "Copyright 2018, Northern Arizona University, Flagstaff AZ"
 
+import warnings
+
 import numpy as np
 import scipy.spatial as graph
 import matplotlib.pyplot as plt
-from util.node import Node
-from util.edge import Edge
+from .node import Node
+from .edge import Edge
+
+
+# Getting real annoyed by some warning from matplotlib. Fixing warnings in code
+# I didn't write = not my problem right now
+warnings.filterwarnings('ignore')
 
 
 ### GRAPHVIZ
@@ -201,7 +208,10 @@ class GraphViz:
 
     ## Main External interface functions for using a RoadGraph
     def paintGraph(self):
-        plt.pause(0.05)
+        """ This made using a notebook really annoying. Making it do nothing
+        was easier than getting rid of all references to it
+        """
+        pass
 
     # Job is to (re)plot a node vertex in different shape/color. Takes in node label, a new vertex shape code,
     # and a new color, and redraws the vertex associated with that node accordingly.

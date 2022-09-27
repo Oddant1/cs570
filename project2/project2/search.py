@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from .graph import Point
 
+from IPython.display import clear_output
 
 Vec2 = namedtuple('Vec2', 'x y')
 
@@ -100,7 +101,7 @@ class Searcher:
         # Formatting print
         if self.verbose:
             print()
-        print(f'FOUND GOAL:\nLABEL: {end.label}\nPATH: {end.path}\nCOST:'
+        print(f'ENDED HERE:\nLABEL: {end.label}\nPATH: {end.path}\nCOST:'
             f' {end.cost}\n')
         print('STATS:\n'
             'AVG_OPEN: {:.2f}\nMAX_OPEN: {:.2f}\n\n'
@@ -292,6 +293,7 @@ class Searcher:
         self.avg_branching += len(children)
 
     def _plotStart(self):
+        clear_output(wait=True)
         self.graph_viz.plot()
         self.graph_viz.markStart(self.start.label)
         for goal in self.goals:

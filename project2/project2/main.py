@@ -1,6 +1,5 @@
 from sys import argv
 
-from util.graphviz import GraphViz
 from graph import Graph
 from search import Searcher
 
@@ -47,4 +46,3 @@ if __name__ == '__main__':
     searcher = Searcher(
         graph, algorithm, start, goals, expansions, heuristic, verbose)
     goal = searcher.search()
-

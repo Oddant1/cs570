@@ -9,10 +9,20 @@ from IPython.display import clear_output
 
 Vec2 = namedtuple('Vec2', 'x y')
 
+algorithms = set(['BFS', 'DFS', 'BEST', 'IDS', 'A*'])
+heuristics = set(['SLD', 'DIR'])
+
 
 class Searcher:
     def __init__(self, graph, algorithm, start, goals, expansions=0,
                  heuristic=None, verbose=False, graph_viz=None):
+        # Bit of validation
+        if algorithm not in algorithms:
+            raise ValueError(f'Invalid algorithm: {algorithm}')
+
+        if algorithm == 'A*' and heuristic not in heuristics:
+            raise ValueError(f'Invalid heuristic: {heuristic}')
+
         self.graph = graph
         self.algorithm = algorithm
 
@@ -58,8 +68,9 @@ class Searcher:
             self._plotStart()
             plt.show()
 
-
     def search(self):
+        """ This is what actually does the searching
+        """
         while self.expansions == 0 or self.expansions_taken < self.expansions:
             self.expansions_taken += 1
 
@@ -96,17 +107,18 @@ class Searcher:
         if self.graph_viz:
             self._plotEnd()
             plt.show()
+            self.graph_viz.reset()
 
         end = self.current_node
         # Formatting print
         if self.verbose:
             print()
         print(f'ENDED HERE:\nLABEL: {end.label}\nPATH: {end.path}\nCOST:'
-            f' {end.cost}\n')
+              f' {end.cost}\n')
         print('STATS:\n'
-            'AVG_OPEN: {:.2f}\nMAX_OPEN: {:.2f}\n\n'
-            'AVG_DEPTH: {:.2f}\nMAX_DEPTH: {:.2f}\n\n'
-            'AVG_BRANCHING_FACTOR: {:.2f}'.format(
+              'AVG_OPEN: {:.2f}\nMAX_OPEN: {:.2f}\n\n'
+              'AVG_DEPTH: {:.2f}\nMAX_DEPTH: {:.2f}\n\n'
+              'AVG_BRANCHING_FACTOR: {:.2f}'.format(
                 self.avg_open, self.max_open, self.avg_depth,
                 self.max_depth, self.avg_branching))
 
@@ -191,11 +203,13 @@ class Searcher:
 
                 if child in self.frontier:
                     existing = self.frontier[self.frontier.index(child)]
-                    if child.cost < existing.cost:
+                    if child.heuristic_cost < existing.heuristic_cost:
                         self.frontier.remove(existing)
                         self.frontier.append(child)
+                        added_children.append(child)
                 else:
                     self.frontier.append(child)
+                    added_children.append(child)
 
             self.frontier.sort(key=lambda node: node.heuristic_cost)
         # The behavior of A* depends on the heuristic. It keeps whichever path
@@ -203,28 +217,32 @@ class Searcher:
         elif self.algorithm == 'A*':
             for child in legal_children:
                 if self.heuristic == 'SLD':
-                    child.heuristic_cost = self._H(child, self._SLD) + child.cost
+                    child.heuristic_cost = \
+                        self._H(child, self._SLD) + child.cost
                 else:
                     child.heuristic_cost = self._H(child, self._DIR)
 
                 if child in self.frontier:
                     existing = self.frontier[self.frontier.index(child)]
-                    if self.heuristic == 'SLD' and child.heuristic_cost < existing.heuristic_cost:
+                    # Add path with shortest real cost + dist
+                    if self.heuristic == 'SLD' and \
+                            child.heuristic_cost < existing.heuristic_cost:
                         self.frontier.remove(existing)
                         self.frontier.append(child)
                         added_children.append(child)
-                    elif self.heuristic == 'DIR' and child.cost < existing.cost:
+                    # Add node With shortest path because we can't compare
+                    # heading history
+                    elif self.heuristic == 'DIR' and \
+                            child.cost < existing.cost:
                         self.frontier.remove(existing)
                         self.frontier.append(child)
                         added_children.append(child)
-                    else:
-                        raise ValueError(f'Unknown heuristic: {self.heuristic}')
                 else:
                     self.frontier.append(child)
                     added_children.append(child)
+            # Sort our frontier by our heuristic so the best node is always
+            # first
             self.frontier.sort(key=lambda node: node.heuristic_cost)
-        else:
-            raise ValueError(f'Unknown algorithm: {self.algorithm}')
 
         return added_children
 
@@ -301,20 +319,25 @@ class Searcher:
 
     def _plotCurrent(self, added_children):
         self._plotStart()
-        self.graph_viz.exploreNode(self.current_node.label, [node.label for node in self.current_node.path])
-        self.graph_viz.exploreEdges(self.current_node.label, [child.label for child in added_children])
+        self.graph_viz.exploreNode(
+            self.current_node.label,
+            [node.label for node in self.current_node.path])
+        self.graph_viz.exploreEdges(
+            self.current_node.label, [child.label for child in added_children])
 
     def _plotEnd(self):
         self._plotStart()
         self.graph_viz.paintPath(
             [node.label for node in self.current_node.path])
 
+
 class SearchNode:
     """ This represents a node identified in the search. It holds the node's
     label, the cost to reach it, and the path taken
     """
 
-    def __init__(self, label, coords=Point(0, 0), path=[], cost=0, heuristic_cost=0):
+    def __init__(self, label, coords=Point(0, 0), path=[], cost=0,
+                 heuristic_cost=0):
         self.label = label
 
         self.x = coords.x
@@ -348,7 +371,6 @@ class SearchNode:
             return f'({self.label}, {self.heuristic_cost:0.2f})'
         else:
             return f'({self.label}, {self.cost:0.2f})'
-
 
     def __sub__(self, other):
         """ Return a vector between this node and another node

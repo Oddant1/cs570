@@ -59,8 +59,8 @@ class GraphViz:
     def reset(self):
         self.markedEdges = []
         self.markedNodes = []
-        plt.close()
-        self.plot()
+        # plt.close()
+        # self.plot()
 
     # A function to load up a graph to visualize. The filename specified by "infile" should contain  a well-formed
     # input file describing the graph. The format is a set of edge descriptions, one line per edge, of following format:

@@ -1,5 +1,6 @@
 import torch
 import random
+from collections import namedtuple
 
 import submission2_utils as util
 
@@ -55,7 +56,7 @@ def create_generation(previous_generation, num_forwarded):
 
     next_generation = []
     # Once we get here, we will have pruned out unfit members of the previous
-    # generation and replaced them.
+    # generation and replaced them with valid random members.
     weights = \
         [prev[0] * (1 / (idx + 1)) for idx, prev in \
          enumerate(previous_generation)]

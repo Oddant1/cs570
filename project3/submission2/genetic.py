@@ -1,51 +1,42 @@
 import torch
 import random
 
-
 import submission2_utils as util
+
+# The percentage chance that we will mutate a given column
+MUTATION_CHANCE = 1
+# The maximum amount we will mutate a continuous column by (multiply this by
+# value then add or subtract that amounts)
+MAX_MUTATION_CHANGE = .05
 
 
 def genetic_algorithm(inputs, fitness_function, num_forwarded, num_generations,
-                      threshold, num_df, mapping):
+                      threshold, num_df, mapping, reverse_mapping):
+    """Takes an initial generation then uses it as a basis to generate future
+    generations.
+    """
     generations = [get_fitnesses(inputs, fitness_function, num_df)]
+    pruned_generations = []
 
     for _ in range(num_generations):
         previous = generations[-1]
-
-        next_generation = create_generation(previous, num_forwarded)
-        next_generation = \
-            get_fitnesses(next_generation, fitness_function, num_df)
-        pruned_next = prune_generation(
-            next_generation, fitness_function, num_forwarded, num_df, mapping,
+        pruned_previous, pruned_out = prune_generation(
+            previous, fitness_function, num_forwarded, num_df, mapping,
             threshold)
+        pruned_generations.append(pruned_out)
 
-        generations.append(pruned_next)
+        next_generation = create_generation(pruned_previous, num_forwarded)
+        mutated = mutate(next_generation, reverse_mapping)
+        fitness_ranked = \
+            get_fitnesses(mutated, fitness_function, num_df)
+        generations.append(fitness_ranked)
 
-    return generations
-
-
-def prune_generation(generation, fitness_function, num_forwarded, num_df,
-                     mapping, threshold):
-    """Replace the members of the previous generation that exceeded the
-    threshold with random new ones that don't.
-    """
-    pruned = [prev for prev in generation if prev[0] <= threshold]
-
-    num_new = num_forwarded - len(pruned)
-    if num_new == 0:
-        sort_fitnesses(pruned)
-        return pruned
-    else:
-        replacements = \
-            [house for house in util.create_houses(num_new, num_df, mapping)]
-        replacements = get_fitnesses(replacements, fitness_function, num_df)
-
-        pruned.extend(replacements)
-        return prune_generation(pruned, fitness_function, num_forwarded,
-                                num_df, mapping, threshold)
+    return generations, pruned_generations
 
 
 def get_fitnesses(generation, fitness_function, num_df):
+    """Get all fitnesses of the current generation.
+    """
     fitnesses = []
     for house in generation:
         normalized_house = util.normalize_single(num_df, house)
@@ -57,18 +48,17 @@ def get_fitnesses(generation, fitness_function, num_df):
     return sort_fitnesses(fitnesses)
 
 
-def sort_fitnesses(fitnesses):
-    fitnesses.sort(key=lambda x: x[0], reverse=True)
-    return fitnesses
-
-
 def create_generation(previous_generation, num_forwarded):
+    """Take the previous generation and create the next generation.
+    """
     sequence_length = len(previous_generation[0][1])
 
     next_generation = []
-    # The weight is just the fitness here. A higher fitness is always going to
-    # be better.
-    weights = [prev[0] for prev in previous_generation]
+    # Once we get here, we will have pruned out unfit members of the previous
+    # generation and replaced them.
+    weights = \
+        [prev[0] * (1 / (idx + 1)) for idx, prev in \
+         enumerate(previous_generation)]
     for _ in range(num_forwarded):
         first_parent = \
             random.choices(previous_generation, weights=weights)[0][1]
@@ -85,3 +75,55 @@ def create_generation(previous_generation, num_forwarded):
         next_generation.append(child)
 
     return next_generation
+
+
+def mutate(generation, reverse_mapping):
+    """Mutate members of the current generation
+    """
+    mutated = generation.copy()
+
+    for house in mutated:
+        for idx, value in enumerate(house):
+            if random.uniform(0, 100) < MUTATION_CHANCE:
+                if idx in reverse_mapping.keys():
+                    # Randomly choose a new category.
+                    new = random.randrange(reverse_mapping[idx]['MAX_VAL'])
+                else:
+                    change = value * random.uniform(
+                        -MAX_MUTATION_CHANGE, MAX_MUTATION_CHANGE)
+                    new = value + change
+                    # All the data is in integers, so we round
+                    new = round(new)
+                house[idx] = new
+
+    return mutated
+
+
+def prune_generation(generation, fitness_function, num_forwarded, num_df,
+                     mapping, threshold, pruned=[]):
+    """Replace the members of the previous generation that exceeded the
+    threshold with random new ones that don't.
+    """
+    remain = [prev for prev in generation if prev[0] <= threshold]
+    pruned.extend([prev for prev in generation if prev[0] > threshold])
+
+    num_new = num_forwarded - len(remain)
+    if num_new == 0:
+        sort_fitnesses(remain)
+        sort_fitnesses(pruned)
+        return remain, pruned
+    else:
+        replacements = \
+            [house for house in util.create_houses(num_new, num_df, mapping)]
+        replacements = get_fitnesses(replacements, fitness_function, num_df)
+
+        remain.extend(replacements)
+        return prune_generation(remain, fitness_function, num_forwarded,
+                                num_df, mapping, threshold, pruned=pruned)
+
+
+def sort_fitnesses(generation):
+    """Sort the given generation by fitness high to low.
+    """
+    generation.sort(key=lambda x: x[0], reverse=True)
+    return generation

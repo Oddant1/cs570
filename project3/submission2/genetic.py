@@ -48,27 +48,27 @@ def get_fitnesses(generation, fitness_function, num_df):
     return sort_fitnesses(fitnesses)
 
 
-def create_generation(previous_generation, num_forwarded):
+def create_generation(pruned_previous, num_forwarded):
     """Take the previous generation and create the next generation.
     """
-    sequence_length = len(previous_generation[0][1])
+    sequence_length = len(pruned_previous[0][1])
 
     next_generation = []
     # Once we get here, we will have pruned out unfit members of the previous
-    # generation and replaced them with valid random members.
+    # generation. We are guaranteed to have at least two valid parents here.
     weights = \
         [prev[0] * (1 / (idx + 1)) for idx, prev in \
-         enumerate(previous_generation)]
+         enumerate(pruned_previous)]
     for _ in range(num_forwarded):
         first_parent = \
-            random.choices(previous_generation, weights=weights)[0][1]
+            random.choices(pruned_previous, weights=weights)[0][1]
         second_parent = \
-            random.choices(previous_generation, weights=weights)[0][1]
+            random.choices(pruned_previous, weights=weights)[0][1]
 
-        # Need two unique parents
+        # Need two unique parents.
         while second_parent == first_parent:
             second_parent = \
-                random.choices(previous_generation, weights=weights)[0][1]
+                random.choices(pruned_previous, weights=weights)[0][1]
 
         split_loc = random.randrange(sequence_length)
         child = first_parent[0:split_loc] + second_parent[split_loc:]

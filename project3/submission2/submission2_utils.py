@@ -1,7 +1,18 @@
-import random
 import torch
+import random
+from collections import namedtuple
 
 import pandas as pd
+
+
+class House():
+    def __init__(self, fitness, secondary_fitness, fields):
+        self.fitness = fitness
+        self.secondary_fitness = secondary_fitness
+        self.fields = fields
+
+    def __repr__(self):
+        return f'{self.fitness}, {self.secondary_fitness}: {self.fields}'
 
 
 class Net(torch.nn.Module):
@@ -83,9 +94,9 @@ def unnormalize(df, column, value):
     return value * (df[column].max() - df[column].min()) + df[column].min()
 
 
-def create_houses(num_houses, df, mapping):
-    for i in range(num_houses):
+def create_houses(num_houses, df):
+    for _ in range(num_houses):
         house = []
         for column in df.loc[:, df.columns != 'SalePrice']:
             house.append(random.randint(df[column].min(), df[column].max()))
-        yield house
+        yield House(0, 0, house)

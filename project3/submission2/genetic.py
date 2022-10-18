@@ -22,8 +22,7 @@ def genetic_algorithm(inputs, fitness_function, num_forwarded, num_generations,
     for _ in range(num_generations):
         previous = generations[-1]
         pruned_previous, pruned_out = prune_generation(
-            previous, fitness_function, num_forwarded, num_df, mapping,
-            threshold)
+            previous, fitness_function, num_df, mapping, threshold)
         pruned_generations.append(pruned_out)
 
         next_generation = create_generation(pruned_previous, num_forwarded)
@@ -79,7 +78,7 @@ def create_generation(previous_generation, num_forwarded):
 
 
 def mutate(generation, reverse_mapping):
-    """Mutate members of the current generation
+    """Mutate members of the current generation.
     """
     mutated = generation.copy()
 
@@ -100,27 +99,28 @@ def mutate(generation, reverse_mapping):
     return mutated
 
 
-def prune_generation(generation, fitness_function, num_forwarded, num_df,
-                     mapping, threshold, pruned=[]):
-    """Replace the members of the previous generation that exceeded the
-    threshold with random new ones that don't.
+def prune_generation(generation, fitness_function, num_df, mapping, threshold,
+                     pruned=[]):
+    """Keep only the members of the current generation that do not exceed the
+    cost threshold. If we end up with fewer than two valid parents we generate
+    new houses that we ensure are under the threshold until we have two valid
+    parents.
     """
     remain = [prev for prev in generation if prev[0] <= threshold]
-    pruned.extend([prev for prev in generation if prev[0] > threshold])
+    pruned = [prev for prev in generation if prev[0] > threshold]
 
-    num_new = num_forwarded - len(remain)
-    if num_new == 0:
-        sort_fitnesses(remain)
-        sort_fitnesses(pruned)
-        return remain, pruned
-    else:
+    # We need at least two valid parents. We are in pretty bad shape if we
+    # have one and even worse if we have 0, so we need to create new ones.
+    while (num_new := 2 - len(remain)) > 0:
         replacements = \
             [house for house in util.create_houses(num_new, num_df, mapping)]
         replacements = get_fitnesses(replacements, fitness_function, num_df)
-
         remain.extend(replacements)
-        return prune_generation(remain, fitness_function, num_forwarded,
-                                num_df, mapping, threshold, pruned=pruned)
+        remain = [prev for prev in generation if prev[0] <= threshold]
+
+    sort_fitnesses(remain)
+    sort_fitnesses(pruned)
+    return remain, pruned
 
 
 def sort_fitnesses(generation):

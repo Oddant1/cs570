@@ -42,31 +42,30 @@ class Net(torch.nn.Module):
 def categorical_to_numeric(df):
     """Takes a dataframe and for every non-numeric column in the dataframe it
     maps each observed value in that column to a unique numerical value. It
-    returns the dataframe mutated by the mapping and the mapping
+    returns the dataframe mutated by the idx_mapping and the idx_mapping
     """
-    mapping = {}
-    reverse_mapping = {}
+    idx_mapping = {}
+    column_mapping = {}
     num_df = df.copy()
 
     for idx, column in enumerate(df.columns):
+        idx_mapping[idx] = {}
+        column_mapping[column] = idx
         if not pd.api.types.is_numeric_dtype(df[column]) or \
                 column == 'MSSubClass':
             counter = 0
-            mapping[idx] = {}
-            reverse_mapping[idx] = {}
 
             for value in df[column]:
-                if value in mapping[idx].keys():
+                if value in idx_mapping[idx].keys():
                     continue
 
-                mapping[idx][value] = counter
-                reverse_mapping[idx][counter] = value
+                idx_mapping[idx][value] = counter
                 counter += 1
 
-            num_df = num_df.replace({column: mapping[idx]})
-            reverse_mapping[idx]['MAX_VAL'] = counter
+            num_df = num_df.replace({column: idx_mapping[idx]})
+            idx_mapping[idx]['MAX_VAL'] = counter
 
-    return num_df, mapping, reverse_mapping
+    return num_df, idx_mapping, column_mapping
 
 
 def normalize(df):
